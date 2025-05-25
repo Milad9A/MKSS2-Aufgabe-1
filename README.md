@@ -10,6 +10,7 @@ A simple REST API server for controlling and managing robots in a virtual enviro
 - Update robot state
 - Track robot actions
 - Robot combat system
+- API documentation with Swagger
 
 ## Setup and Installation
 
@@ -34,6 +35,45 @@ A simple REST API server for controlling and managing robots in a virtual enviro
    ```
 
 The server will start on port 8080.
+
+## Testing with Postman
+
+### Import the Collection
+
+1. Download the Postman collection file from the project directory:
+
+   - `Robot_API.postman_collection.json`
+
+2. Open Postman and click on "Import" in the top left corner
+
+3. Drag and drop the collection file or click "Upload Files" to select it
+
+4. The Robot API collection will be imported with all endpoints ready to test
+
+### Using the Collection
+
+The collection includes all available endpoints with pre-configured:
+
+- Request methods (GET, POST, PATCH)
+- URL parameters
+- Example request bodies for POST/PATCH requests
+
+To test the API:
+
+1. Start the server: `go run .`
+2. Open the imported collection in Postman
+3. Select an endpoint and click "Send"
+4. View the response in the response panel
+
+### Collection Environment Variables
+
+The collection uses the following variables:
+
+- `baseUrl`: Set to `http://localhost:8080` by default
+- `robotId`: Set to `robot1` by default
+- `itemId`: Set to `item1` by default
+
+You can modify these variables in the Postman environment settings.
 
 ## API Endpoints
 

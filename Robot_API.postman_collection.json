@@ -1,0 +1,180 @@
+{
+    "info": {
+        "name": "Robot API",
+        "description": "A collection for testing the Robot API endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "robotId",
+            "value": "robot1",
+            "type": "string"
+        },
+        {
+            "key": "itemId",
+            "value": "item1",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Get Robot Status",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/status",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "status"
+                    ]
+                },
+                "description": "Returns the current status of a robot including position, energy, and inventory."
+            },
+            "response": []
+        },
+        {
+            "name": "Move Robot",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/move",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "move"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"direction\": \"up\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "description": "Moves a robot in the specified direction (up, down, left, right)."
+            },
+            "response": []
+        },
+        {
+            "name": "Pickup Item",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/pickup/{{itemId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "pickup",
+                        "{{itemId}}"
+                    ]
+                },
+                "description": "Makes a robot pick up an item and add it to its inventory."
+            },
+            "response": []
+        },
+        {
+            "name": "Put Down Item",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/putdown/{{itemId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "putdown",
+                        "{{itemId}}"
+                    ]
+                },
+                "description": "Makes a robot put down an item from its inventory."
+            },
+            "response": []
+        },
+        {
+            "name": "Update Robot State",
+            "request": {
+                "method": "PATCH",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/state",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "state"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"energy\": 80,\n  \"position\": {\n    \"x\": 5,\n    \"y\": 5\n  }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "description": "Updates robot's state (energy and/or position)."
+            },
+            "response": []
+        },
+        {
+            "name": "Get Robot Actions",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/actions",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "actions"
+                    ]
+                },
+                "description": "Returns a history of actions performed by the robot."
+            },
+            "response": []
+        },
+        {
+            "name": "Attack Robot",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/attack/robot2",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "robot",
+                        "{{robotId}}",
+                        "attack",
+                        "robot2"
+                    ]
+                },
+                "description": "Makes one robot attack another, reducing the target's energy."
+            },
+            "response": []
+        }
+    ]
+}
