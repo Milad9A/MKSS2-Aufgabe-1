@@ -36,6 +36,41 @@ A simple REST API server for controlling and managing robots in a virtual enviro
 
 The server will start on port 8080.
 
+## Automated Testing
+
+The project includes comprehensive unit tests for all API endpoints. The tests verify both the successful operations and error handling of the API.
+
+### Running the Tests
+
+To run all tests:
+
+```
+go test -v
+```
+
+### Test Coverage
+
+To run tests with coverage report:
+
+```
+go test -cover
+```
+
+### What's Tested
+
+The test suite covers:
+
+- Getting robot status with HATEOAS links
+- Moving robots in different directions
+- Picking up and putting down items
+- Updating robot state (energy and position)
+- Retrieving paginated action history
+- Robot combat system
+- Error handling for non-existent robots and items
+- Pagination navigation for action history
+
+Each test verifies both the HTTP response status and the actual data modifications to ensure the API functions correctly.
+
 ## Testing with Postman
 
 ### Import the Collection
