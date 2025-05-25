@@ -91,7 +91,43 @@ func (s *RobotStorage) Initialize() {
 		Direction: "north",
 		Energy:    100,
 		Inventory: []string{},
-		Actions:   []Action{},
+		Actions: []Action{
+			{
+				Type:      "create",
+				Timestamp: time.Now().Add(-24 * time.Hour),
+				Details:   "Robot was created",
+			},
+			{
+				Type:      "move",
+				Timestamp: time.Now().Add(-12 * time.Hour),
+				Details:   "Moved north",
+			},
+			{
+				Type:      "pickup",
+				Timestamp: time.Now().Add(-6 * time.Hour),
+				Details:   "Picked up item1",
+			},
+			{
+				Type:      "putdown",
+				Timestamp: time.Now().Add(-3 * time.Hour),
+				Details:   "Put down item1",
+			},
+			{
+				Type:      "update",
+				Timestamp: time.Now().Add(-1 * time.Hour),
+				Details:   "Updated energy to 100",
+			},
+			{
+				Type:      "move",
+				Timestamp: time.Now().Add(-30 * time.Minute),
+				Details:   "Moved east",
+			},
+			{
+				Type:      "attack",
+				Timestamp: time.Now().Add(-15 * time.Minute),
+				Details:   "Attacked robot2",
+			},
+		},
 	}
 
 	robot2 := &Robot{
@@ -100,7 +136,23 @@ func (s *RobotStorage) Initialize() {
 		Direction: "south",
 		Energy:    100,
 		Inventory: []string{},
-		Actions:   []Action{},
+		Actions: []Action{
+			{
+				Type:      "create",
+				Timestamp: time.Now().Add(-24 * time.Hour),
+				Details:   "Robot was created",
+			},
+			{
+				Type:      "move",
+				Timestamp: time.Now().Add(-10 * time.Hour),
+				Details:   "Moved south",
+			},
+			{
+				Type:      "damaged",
+				Timestamp: time.Now().Add(-15 * time.Minute),
+				Details:   "Damaged by robot1",
+			},
+		},
 	}
 
 	s.items["item1"] = true

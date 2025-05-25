@@ -177,7 +177,21 @@ curl -X POST http://localhost:8080/robot/robot1/pickup/item1
 
 The server starts with two robots:
 
-- robot1 at position (0,0) facing north
-- robot2 at position (10,10) facing south
+- robot1:
+  - Position: (0,0)
+  - Direction: north
+  - Energy: 100
+  - Action history: 7 pre-populated actions including creation, movement, item interactions, and combat
+- robot2:
+  - Position: (10,10)
+  - Direction: south
+  - Energy: 100
+  - Action history: 3 pre-populated actions including creation, movement, and being damaged
 
-And three items: item1, item2, item3
+And three items in the world:
+
+- item1
+- item2
+- item3
+
+This pre-populated data allows you to immediately test the API's functionality, including the pagination of action history and HATEOAS navigation links.

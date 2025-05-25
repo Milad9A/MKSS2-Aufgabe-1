@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "Robot API",
-        "description": "A collection for testing the Robot API endpoints",
+        "description": "A collection for testing the Robot API endpoints with HATEOAS navigation and pagination",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -18,6 +18,21 @@
         {
             "key": "itemId",
             "value": "item1",
+            "type": "string"
+        },
+        {
+            "key": "actionsLink",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "nextPageLink",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "prevPageLink",
+            "value": "",
             "type": "string"
         }
     ],
@@ -37,9 +52,40 @@
                         "status"
                     ]
                 },
-                "description": "Returns the current status of a robot including position, energy, and inventory."
+                "description": "Returns the current status of a robot including position, energy, and inventory. Includes HATEOAS links."
             },
-            "response": []
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Test that response is OK",
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Parse the response body",
+                            "const responseBody = pm.response.json();",
+                            "",
+                            "// Test for presence of HATEOAS links",
+                            "pm.test(\"Response contains HATEOAS links\", function () {",
+                            "    pm.expect(responseBody.links).to.be.an('array').and.not.to.be.empty;",
+                            "});",
+                            "",
+                            "// Extract and store action links for later use",
+                            "if (responseBody.links) {",
+                            "    responseBody.links.forEach(function(link) {",
+                            "        if (link.rel === 'actions') {",
+                            "            pm.environment.set('actionsLink', link.href);",
+                            "        }",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ]
         },
         {
             "name": "Move Robot",
@@ -142,7 +188,7 @@
             "request": {
                 "method": "GET",
                 "url": {
-                    "raw": "{{baseUrl}}/robot/{{robotId}}/actions",
+                    "raw": "{{baseUrl}}/robot/{{robotId}}/actions?page={{page}}&size={{size}}",
                     "host": [
                         "{{baseUrl}}"
                     ],
@@ -150,11 +196,258 @@
                         "robot",
                         "{{robotId}}",
                         "actions"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "{{page}}",
+                            "description": "Page number (starts at 1)"
+                        },
+                        {
+                            "key": "size",
+                            "value": "{{size}}",
+                            "description": "Number of items per page"
+                        }
                     ]
                 },
-                "description": "Returns a history of actions performed by the robot."
+                "description": "Returns a paginated history of actions performed by the robot with HATEOAS links for navigation."
             },
-            "response": []
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Test that response is OK",
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Parse the response body",
+                            "const responseBody = pm.response.json();",
+                            "",
+                            "// Test for pagination information",
+                            "pm.test(\"Response contains pagination info\", function () {",
+                            "    pm.expect(responseBody.page).to.be.an('object');",
+                            "    pm.expect(responseBody.page.number).to.be.a('number');",
+                            "    pm.expect(responseBody.page.size).to.be.a('number');",
+                            "    pm.expect(responseBody.page.totalElements).to.be.a('number');",
+                            "    pm.expect(responseBody.page.totalPages).to.be.a('number');",
+                            "});",
+                            "",
+                            "// Test for HATEOAS links",
+                            "pm.test(\"Response contains navigation links\", function () {",
+                            "    pm.expect(responseBody.links).to.be.an('array');",
+                            "});",
+                            "",
+                            "// Store navigation links for later use",
+                            "if (responseBody.links) {",
+                            "    responseBody.links.forEach(function(link) {",
+                            "        if (link.rel === 'next') {",
+                            "            pm.environment.set('nextPageLink', link.href);",
+                            "        }",
+                            "        if (link.rel === 'previous') {",
+                            "            pm.environment.set('prevPageLink', link.href);",
+                            "        }",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Set default values for pagination if not already set",
+                            "if (!pm.environment.get('page')) {",
+                            "    pm.environment.set('page', 1);",
+                            "}",
+                            "",
+                            "if (!pm.environment.get('size')) {",
+                            "    pm.environment.set('size', 5);",
+                            "}"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Navigate to Next Page",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{baseUrl}}{{nextPageLink}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "{{nextPageLink}}"
+                    ]
+                },
+                "description": "Navigate to the next page of robot actions using the HATEOAS link from previous response."
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Check if we have a next page link",
+                            "if (!pm.environment.get('nextPageLink')) {",
+                            "    console.log('No next page link available. Please run \"Get Robot Actions\" first.');",
+                            "}"
+                        ]
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Test that response is OK",
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Parse the response body",
+                            "const responseBody = pm.response.json();",
+                            "",
+                            "// Update navigation links",
+                            "if (responseBody.links) {",
+                            "    responseBody.links.forEach(function(link) {",
+                            "        if (link.rel === 'next') {",
+                            "            pm.environment.set('nextPageLink', link.href);",
+                            "        }",
+                            "        if (link.rel === 'previous') {",
+                            "            pm.environment.set('prevPageLink', link.href);",
+                            "        }",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Navigate to Previous Page",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{baseUrl}}{{prevPageLink}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "{{prevPageLink}}"
+                    ]
+                },
+                "description": "Navigate to the previous page of robot actions using the HATEOAS link from previous response."
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Check if we have a previous page link",
+                            "if (!pm.environment.get('prevPageLink')) {",
+                            "    console.log('No previous page link available. Please run \"Get Robot Actions\" first.');",
+                            "}"
+                        ]
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Test that response is OK",
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Parse the response body",
+                            "const responseBody = pm.response.json();",
+                            "",
+                            "// Update navigation links",
+                            "if (responseBody.links) {",
+                            "    responseBody.links.forEach(function(link) {",
+                            "        if (link.rel === 'next') {",
+                            "            pm.environment.set('nextPageLink', link.href);",
+                            "        }",
+                            "        if (link.rel === 'previous') {",
+                            "            pm.environment.set('prevPageLink', link.href);",
+                            "        }",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Follow Actions Link",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{actionsLink}}",
+                    "host": [
+                        "{{actionsLink}}"
+                    ]
+                },
+                "description": "Follow the actions link obtained from the robot status response."
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Check if we have an actions link",
+                            "if (!pm.environment.get('actionsLink')) {",
+                            "    console.log('No actions link available. Please run \"Get Robot Status\" first.');",
+                            "}"
+                        ]
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// Test that response is OK",
+                            "pm.test(\"Status code is 200\", function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Parse the response body",
+                            "const responseBody = pm.response.json();",
+                            "",
+                            "// Test for pagination information",
+                            "pm.test(\"Response contains pagination info\", function () {",
+                            "    pm.expect(responseBody.page).to.be.an('object');",
+                            "});",
+                            "",
+                            "// Store navigation links for later use",
+                            "if (responseBody.links) {",
+                            "    responseBody.links.forEach(function(link) {",
+                            "        if (link.rel === 'next') {",
+                            "            pm.environment.set('nextPageLink', link.href);",
+                            "        }",
+                            "        if (link.rel === 'previous') {",
+                            "            pm.environment.set('prevPageLink', link.href);",
+                            "        }",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ]
         },
         {
             "name": "Attack Robot",

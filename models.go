@@ -35,3 +35,32 @@ type StateUpdateRequest struct {
 	Energy   *int      `json:"energy,omitempty"`
 	Position *Position `json:"position,omitempty"`
 }
+
+// Link represents a HATEOAS link
+type Link struct {
+	Rel  string `json:"rel"`
+	Href string `json:"href"`
+}
+
+// PageInfo contains pagination information
+type PageInfo struct {
+	Number        int  `json:"number"`
+	Size          int  `json:"size"`
+	TotalElements int  `json:"totalElements"`
+	TotalPages    int  `json:"totalPages"`
+	HasNext       bool `json:"hasNext"`
+	HasPrevious   bool `json:"hasPrevious"`
+}
+
+// ActionWithLinks represents an action with HATEOAS links
+type ActionWithLinks struct {
+	Action
+	Links []Link `json:"links"`
+}
+
+// PaginatedActions represents a paginated list of actions with navigation links
+type PaginatedActions struct {
+	Page    PageInfo          `json:"page"`
+	Actions []ActionWithLinks `json:"actions"`
+	Links   []Link            `json:"links"`
+}

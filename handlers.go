@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,11 +28,30 @@ func (h *RobotHandler) GetStatus(c *gin.Context) {
 		return
 	}
 
+	// Create HATEOAS links
+	baseURL := c.Request.Host
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+
+	links := []Link{
+		{
+			Rel:  "self",
+			Href: fmt.Sprintf("%s://%s/robot/%s/status", scheme, baseURL, id),
+		},
+		{
+			Rel:  "actions",
+			Href: fmt.Sprintf("%s://%s/robot/%s/actions?page=1&size=5", scheme, baseURL, id),
+		},
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"id":        robot.ID,
 		"position":  robot.Position,
 		"energy":    robot.Energy,
 		"inventory": robot.Inventory,
+		"links":     links,
 	})
 }
 
@@ -177,7 +198,7 @@ func (h *RobotHandler) UpdateState(c *gin.Context) {
 	})
 }
 
-// GetActions returns all actions performed by a robot
+// GetActions returns all actions performed by a robot with pagination
 func (h *RobotHandler) GetActions(c *gin.Context) {
 	id := c.Param("id")
 	robot, err := h.storage.GetRobot(id)
@@ -186,9 +207,83 @@ func (h *RobotHandler) GetActions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"actions": robot.Actions,
-	})
+	// Get pagination parameters
+	pageStr := c.DefaultQuery("page", "1")
+	sizeStr := c.DefaultQuery("size", "5")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil || size < 1 {
+		size = 5
+	}
+
+	// Calculate pagination
+	totalElements := len(robot.Actions)
+	totalPages := int(math.Ceil(float64(totalElements) / float64(size)))
+
+	if page > totalPages && totalPages > 0 {
+		page = totalPages
+	}
+
+	startIndex := (page - 1) * size
+	endIndex := startIndex + size
+	if endIndex > totalElements {
+		endIndex = totalElements
+	}
+
+	// Create paginated actions slice
+	var paginatedActions []ActionWithLinks
+	for i := startIndex; i < endIndex; i++ {
+		action := robot.Actions[i]
+		actionWithLinks := ActionWithLinks{
+			Action: action,
+			Links: []Link{
+				{
+					Rel:  "self",
+					Href: fmt.Sprintf("http://%s/robot/%s/actions/%d", c.Request.Host, id, i+1),
+				},
+			},
+		}
+		paginatedActions = append(paginatedActions, actionWithLinks)
+	}
+
+	// Create page info
+	pageInfo := PageInfo{
+		Number:        page,
+		Size:          size,
+		TotalElements: totalElements,
+		TotalPages:    totalPages,
+		HasNext:       page < totalPages,
+		HasPrevious:   page > 1,
+	}
+
+	// Create navigation links
+	var links []Link
+	if pageInfo.HasNext {
+		links = append(links, Link{
+			Rel:  "next",
+			Href: fmt.Sprintf("/robot/%s/actions?page=%d&size=%d", id, page+1, size),
+		})
+	}
+
+	if pageInfo.HasPrevious {
+		links = append(links, Link{
+			Rel:  "previous",
+			Href: fmt.Sprintf("/robot/%s/actions?page=%d&size=%d", id, page-1, size),
+		})
+	}
+
+	response := PaginatedActions{
+		Page:    pageInfo,
+		Actions: paginatedActions,
+		Links:   links,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // AttackRobot handles one robot attacking another
